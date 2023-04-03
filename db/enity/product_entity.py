@@ -12,5 +12,22 @@ product_ingredient_association = Table('product_ingredient_association', Base.me
 class ProductEntity(Base):
     __tablename__ = 'products'
     id = Column(Integer, primary_key=True)
+    brand = Column(String(50))
     name = Column(String(50), unique=True, nullable=False)
     ingredients = relationship("IngredientEntity", secondary=product_ingredient_association)
+
+
+class ProductNutritionPer100GramEntity(Base):
+    __tablename__ = 'product_nutrition'
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey('products.id'))
+    calories = Column(Integer)
+    fat = Column(Integer)
+    saturated_fat = Column(Integer)
+    carbs = Column(Integer)
+    sugar = Column(Integer)
+    fiber = Column(Integer)
+    protein = Column(Integer)
+    salt = Column(Integer)
+
+    product = relationship("ProductEntity", uselist=False, backref="nutrition")

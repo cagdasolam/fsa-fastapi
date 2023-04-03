@@ -1,12 +1,11 @@
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
-from model.user_model import UserRegisterRequest
-from db.enity.user_entity import UserEntity
-from db.enity.diet_entity import DietEntity
-from db.repository.diet_repo import get_diet_by_name
 from core.hashing import Hasher
+from db.enity.user_entity import UserEntity
+from db.repository.diet_repo import get_diet_by_name
+from model.user_model import UserRegisterRequest
 
 
 def get_users(db: Session):

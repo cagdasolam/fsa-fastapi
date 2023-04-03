@@ -49,7 +49,8 @@ async def update_product(ingredient_id: int,
                          current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    product = ingredient_repo.update_ingredient(ingredient_id=ingredient_id, updated_ingredient=updated_ingredient, db=db)
+    product = ingredient_repo.update_ingredient(ingredient_id=ingredient_id, updated_ingredient=updated_ingredient,
+                                                db=db)
     if product is None:
         raise HTTPException(status_code=404, detail="there is no ingredient id with {}".format(ingredient_id))
     return product
@@ -64,4 +65,3 @@ async def delete_product(ingredient_id: int,
     product = ingredient_repo.delete_ingredient(ingredient_id=ingredient_id, db=db)
     if product is None:
         raise HTTPException(status_code=404, detail="there is no ingredient id with {}".format(ingredient_id))
-

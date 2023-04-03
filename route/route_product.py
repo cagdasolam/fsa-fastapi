@@ -36,6 +36,18 @@ async def get_product_by_id(product_id: int = Path(..., ge=1),
     return product
 
 
+@router.get("/{brand_name}", response_model=List[ProductDTO])
+async def get_products_by_brand(brand_name: str,
+                                db: Session = Depends(get_db),
+                                current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    products = product_repo.get_products_by_brand(brand_name=brand_name, db=db)
+    if products is None:
+        raise HTTPException(status_code=404, detail="Brand no found")
+    return products
+
+
 @router.post("/", response_model=ProductDTO)
 async def create_product(new_product: ProductRequest,
                          db: Session = Depends(get_db),

@@ -2,7 +2,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
-from db.enity.product_entity import ProductEntity, product_ingredient_association
+from db.enity.product_entity import ProductEntity, ProductNutritionPer100GramEntity
 from db.repository.ingredient_repo import get_ingredient_by_name
 from model.product_model import ProductRequest
 
@@ -27,6 +27,14 @@ def get_products(db: Session):
     return db.query(ProductEntity).all()
 
 
+def get_products_by_brand(brand_name: str, db: Session):
+    try:
+        products = db.query(ProductEntity).filter(ProductEntity.brand == brand_name).all()
+    except NoResultFound:
+        products = None
+    return products
+
+
 def create_product(new_product: ProductRequest, db: Session):
     try:
         ingredients = []
@@ -34,7 +42,20 @@ def create_product(new_product: ProductRequest, db: Session):
             ingredient_entity = get_ingredient_by_name(name=ingredient.name, db=db)
             ingredients.append(ingredient_entity)
 
-        product = ProductEntity(name=new_product.name, ingredients=ingredients)
+        product = ProductEntity(name=new_product.name, ingredients=ingredients, brand=new_product.brand)
+
+        nutrition = [ProductNutritionPer100GramEntity(
+            calories=new_product.nutrition.calories,
+            fat=new_product.nutrition.fat,
+            saturated_fat=new_product.nutrition.saturated_fat,
+            carbs=new_product.nutrition.carbs,
+            sugar=new_product.nutrition.sugar,
+            fiber=new_product.nutrition.fiber,
+            protein=new_product.nutrition.protein,
+            salt=new_product.nutrition.salt
+        )]
+
+        product.nutrition = nutrition
         db.add(product)
         db.commit()
         db.refresh(product)

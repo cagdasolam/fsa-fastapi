@@ -88,7 +88,7 @@ async def delete_product(product_id: int,
 async def predict_product_from_photo(file: UploadFile = File(...),
                                      db: Session = Depends(get_db),
                                      current_user: UserEntity = Depends(get_current_user_from_token)
-                                     ) -> Any:
+                                     ) -> bool:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     img = Image.open(file.file)
@@ -96,6 +96,8 @@ async def predict_product_from_photo(file: UploadFile = File(...),
     if res is None:
         raise HTTPException(status_code=404, detail="no product found")
     found_product = product_repo.get_by_product_name(product_name=res, db=db)
+    if found_product is None:
+        raise HTTPException(status_code=404, detail="no product found database")
     return can_consume_product(found_product=found_product, current_user=current_user)
 
 

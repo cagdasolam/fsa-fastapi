@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torchvision.transforms import transforms
 
-class_file_path = './product_names.txt'
+class_file_path = '/app/fsa_fastapi/product_names.txt'
 
 with open(class_file_path, 'r') as file:
     classes = file.read().splitlines()
@@ -69,7 +69,7 @@ with open(class_file_path, 'r') as file:
             return output
 
 
-    checkpoint = torch.load('best_checkpoint.model', map_location=torch.device('cpu'))
+    checkpoint = torch.load('/app/fsa_fastapi/best_checkpoint.model', map_location=torch.device('cpu'))
     model = ConvNet(num_classes=16)
     model.load_state_dict(checkpoint)
     model.eval()

@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "fsa-fastapi"
+version = "0.1.0"
+description = ""
+authors = ["can"]
+packages = [{include = "fsa_fastapi"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+fastapi = ">=0.95.0,<0.96.0"
+uvicorn = "^0.22.0"
+sqlalchemy = ">=2.0.7,<2.1.0"
+psycopg2-binary = "^2.9.6"
+python-dotenv = ">=1.0.0,<1.1.0"
+pydantic = {version = ">=1.10.6,<1.11.0", extras = ["email"]}
+passlib = {version = ">=1.7.4,<1.8.0", extras = ["bcrypt"]}
+pytest = ">=7.2.2,<7.3.0"
+requests = "^2.31.0"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+python-multipart = "^0.0.6"
+pillow = ">=9.4.0,<9.5.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[DietDTO])
 async def get_all_diets(db: Session = Depends(get_db),
-                        current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
+                        current_user: UserEntity = Depends(get_current_user_from_token)) -> [DietDTO]:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return diet_repo.get_diets(db=db)
@@ -24,7 +24,7 @@ async def get_all_diets(db: Session = Depends(get_db),
 @router.get("/{diet_id}", response_model=DietDTO)
 async def get_diet_by_id(diet_id: int = Path(..., ge=1),
                          db: Session = Depends(get_db),
-                         current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
+                         current_user: UserEntity = Depends(get_current_user_from_token)) -> DietDTO:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     diet = diet_repo.get_diet_by_id(diet_id=diet_id, db=db)
@@ -39,6 +39,8 @@ async def create_diet(new_diet: DietRequest,
                       current_user: UserEntity = Depends(get_current_user_from_token)):
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
     diet = diet_repo.create_diet(new_diet=new_diet, db=db)
     if diet is None:
         raise HTTPException(status_code=404, detail="Product already exist")
@@ -52,6 +54,8 @@ async def update_diet(diet_id: int,
                       current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
     diet = diet_repo.update_diet(diet_id=diet_id, updated_diet=updated_diet, db=db)
     if diet is None:
         raise HTTPException(status_code=404, detail="there is no product id with {}".format(diet_id))
@@ -64,6 +68,8 @@ async def delete_diet(diet_id: int,
                       current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
     diet = diet_repo.delete_diet(diet_id=diet_id, db=db)
     if diet is None:
         raise HTTPException(status_code=404, detail="there is no product id with {}".format(diet_id))

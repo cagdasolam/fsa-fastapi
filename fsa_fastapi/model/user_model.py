@@ -14,6 +14,7 @@ class UserRegisterRequest(BaseModel):
 
 
 class UserDTO(BaseModel):
+    id: int
     name: str
     surname: str
     email: EmailStr

@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torchvision.transforms import transforms
 
-class_file_path = './product_names.txt'
+class_file_path = '/app/fsa_fastapi/product_names.txt'
 
 with open(class_file_path, 'r') as file:
     classes = file.read().splitlines()

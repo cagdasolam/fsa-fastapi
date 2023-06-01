@@ -18,7 +18,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[ProductDTO])
 async def get_all_products(db: Session = Depends(get_db),
-                           current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
+                           current_user: UserEntity = Depends(get_current_user_from_token)) -> ProductDTO:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return product_repo.get_products(db=db)
@@ -27,7 +27,7 @@ async def get_all_products(db: Session = Depends(get_db),
 @router.get("/{product_id}", response_model=ProductDTO)
 async def get_product_by_id(product_id: int = Path(..., ge=1),
                             db: Session = Depends(get_db),
-                            current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
+                            current_user: UserEntity = Depends(get_current_user_from_token)):
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     product = product_repo.get_by_product_id(product_id=product_id, db=db)
@@ -54,6 +54,8 @@ async def create_product(new_product: ProductRequest,
                          current_user: UserEntity = Depends(get_current_user_from_token)):
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
     product = product_repo.create_product(new_product=new_product, db=db)
     if product is None:
         raise HTTPException(status_code=404, detail="Product already exist")
@@ -67,6 +69,8 @@ async def update_product(product_id: int,
                          current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
     product = product_repo.update_product(product_id=product_id, updated_product=updated_product, db=db)
     if product is None:
         raise HTTPException(status_code=404, detail="there is no product id with {}".format(product_id))
@@ -79,6 +83,8 @@ async def delete_product(product_id: int,
                          current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
     product = product_repo.delete_product(product_id=product_id, db=db)
     if product is None:
         raise HTTPException(status_code=404, detail="there is no product id with {}".format(product_id))
@@ -88,7 +94,7 @@ async def delete_product(product_id: int,
 async def predict_product_from_photo(file: UploadFile = File(...),
                                      db: Session = Depends(get_db),
                                      current_user: UserEntity = Depends(get_current_user_from_token)
-                                     ) -> bool:
+                                     ) -> dict:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     img = Image.open(file.file)
@@ -98,7 +104,8 @@ async def predict_product_from_photo(file: UploadFile = File(...),
     found_product = product_repo.get_by_product_name(product_name=res, db=db)
     if found_product is None:
         raise HTTPException(status_code=404, detail="no product found database")
-    return can_consume_product(found_product=found_product, current_user=current_user)
+    return {'product': found_product,
+            'can_consume': can_consume_product(found_product=found_product, current_user=current_user)}
 
 
 def can_consume_product(found_product: ProductEntity, current_user: UserEntity) -> bool:

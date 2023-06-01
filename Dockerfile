@@ -1,21 +1,36 @@
-# Use an official Python runtime as the base image
-FROM python:3.9-slim-buster
-
-# Set the working directory in the container
+# ---- Base Python ----
+FROM python:3.9 AS base
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 WORKDIR /app
 
-# Install the PostgreSQL development libraries and binaries
-RUN apt-get update && apt-get install -y libpq-dev
+# ---- Dependencies ----
+FROM base AS dependencies
+# Install pip
+RUN pip install --upgrade pip
+# Copy only requirements to cache them in docker layer
+COPY ./fsa_fastapi /app/fsa_fastapi
+COPY pyproject.toml poetry.lock /app/
+# Project initialization
+RUN pip install poetry \
+    && poetry config virtualenvs.create false \
+    # Install PyTorch CPU only
+    && pip install torch==1.9.0+cpu torchvision==0.10.0+cpu torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html \
+    && poetry install --no-interaction --no-ansi
 
-# Copy the requirements.txt file
-COPY requirements.txt .
+# ---- Copy Code ----
+FROM dependencies AS release
+# Copy the code
 
-# Install the required Python packages
-RUN pip install --no-cache-dir -r requirements.txt
+# Expose the port the app runs on
+EXPOSE 8000
 
-# Copy the model file and prediction script
-COPY . .
+# List all installed packages
+RUN poetry show
 
-# Set the entry point to the prediction script
-ENTRYPOINT ["python", "prediction.py"]
+# Ensure that Python knows where to find your application
+ENV PYTHONPATH=/app/fsa_fastapi
 
+# Run the application
+CMD ["poetry", "run", "uvicorn", "fsa_fastapi.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -17,19 +17,3 @@ class ProductEntity(Base):
     name = Column(String(50), unique=True, nullable=False)
     ingredients = relationship("IngredientEntity", secondary=product_ingredient_association)
     nutrition = Column(JSONB)
-
-
-# class ProductNutritionPer100GramEntity(Base):
-#     __tablename__ = 'nutrition'
-#     id = Column(Integer, primary_key=True)
-#     product_id = Column(Integer, ForeignKey('products.id'))
-#     calories = Column(Integer)
-#     fat = Column(Integer)
-#     saturated_fat = Column(Integer)
-#     carbs = Column(Integer)
-#     sugar = Column(Integer)
-#     fiber = Column(Integer)
-#     protein = Column(Integer)
-#     salt = Column(Integer)
-#
-#     product = relationship("ProductEntity", uselist=False, backref="nutrition")

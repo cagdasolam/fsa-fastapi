@@ -89,3 +89,5 @@ def update_product(product_id: int, updated_product: ProductRequest, db: Session
         print(str(e))
         db.rollback()
         return None
+
+

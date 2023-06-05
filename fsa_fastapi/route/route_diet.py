@@ -29,7 +29,7 @@ async def get_diet_by_id(diet_id: int = Path(..., ge=1),
         raise HTTPException(status_code=401, detail="Not authenticated")
     diet = diet_repo.get_diet_by_id(diet_id=diet_id, db=db)
     if diet is None:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(status_code=200, detail="Product not found")
     return diet
 
 
@@ -43,7 +43,7 @@ async def create_diet(new_diet: DietRequest,
         raise HTTPException(status_code=403, detail="Not authorized")
     diet = diet_repo.create_diet(new_diet=new_diet, db=db)
     if diet is None:
-        raise HTTPException(status_code=404, detail="Product already exist")
+        raise HTTPException(status_code=200, detail="Product already exist")
     return diet
 
 
@@ -58,7 +58,7 @@ async def update_diet(diet_id: int,
         raise HTTPException(status_code=403, detail="Not authorized")
     diet = diet_repo.update_diet(diet_id=diet_id, updated_diet=updated_diet, db=db)
     if diet is None:
-        raise HTTPException(status_code=404, detail="there is no product id with {}".format(diet_id))
+        raise HTTPException(status_code=200, detail="there is no product id with {}".format(diet_id))
     return diet
 
 
@@ -72,4 +72,4 @@ async def delete_diet(diet_id: int,
         raise HTTPException(status_code=403, detail="Not authorized")
     diet = diet_repo.delete_diet(diet_id=diet_id, db=db)
     if diet is None:
-        raise HTTPException(status_code=404, detail="there is no product id with {}".format(diet_id))
+        raise HTTPException(status_code=200, detail="there is no product id with {}".format(diet_id))

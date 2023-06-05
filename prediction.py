@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 from torchvision.transforms import transforms
+from torch.autograd import Variable
+from PIL import Image
 
 class_file_path = './product_names.txt'
 
@@ -9,85 +10,101 @@ with open(class_file_path, 'r') as file:
     classes = file.read().splitlines()
 
 
-    # CNN Network
-    class ConvNet(nn.Module):
-        def __init__(self, num_classes=16):
-            super(ConvNet, self).__init__()
+class ConvNet(nn.Module):
+    def __init__(self, num_classes=12):
+        super(ConvNet, self).__init__()
 
-            # Output size after convolution filter
-            # ((w-f+2P)/s) +1
+        self.layer1 = nn.Sequential(
+            nn.Conv2d(in_channels=3, out_channels=12, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=12),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(p=0.2)
+        )
 
-            # Input shape= (256,3,150,150)
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(in_channels=12, out_channels=20, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(p=0.3)
+        )
 
-            self.conv1 = nn.Conv2d(in_channels=3, out_channels=12, kernel_size=3, stride=1, padding=1)
-            # Shape= (256,12,150,150)
-            self.bn1 = nn.BatchNorm2d(num_features=12)
-            # Shape= (256,12,150,150)
-            self.relu1 = nn.ReLU()
-            # Shape= (256,12,150,150)
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(in_channels=20, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=32),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(p=0.4)
+        )
 
-            self.pool = nn.MaxPool2d(kernel_size=2)
-            # Reduce the image size be factor 2
-            # Shape= (256,12,75,75)
+        self.layer4 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=64),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(p=0.5)
+        )
 
-            self.conv2 = nn.Conv2d(in_channels=12, out_channels=20, kernel_size=3, stride=1, padding=1)
-            # Shape= (256,20,75,75)
-            self.relu2 = nn.ReLU()
-            # Shape= (256,20,75,75)
+        self.layer5 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(num_features=128),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout2d(p=0.6)
+        )
 
-            self.conv3 = nn.Conv2d(in_channels=20, out_channels=32, kernel_size=3, stride=1, padding=1)
-            # Shape= (256,32,75,75)
-            self.bn3 = nn.BatchNorm2d(num_features=32)
-            # Shape= (256,32,75,75)
-            self.relu3 = nn.ReLU()
-            # Shape= (256,32,75,75)
+        self.fc = nn.Linear(in_features=18 * 18 * 32, out_features=num_classes)
 
-            self.fc = nn.Linear(in_features=75 * 75 * 32, out_features=num_classes)
-
-            # Feed forwad function
-
-        def forward(self, input):
-            output = self.conv1(input)
-            output = self.bn1(output)
-            output = self.relu1(output)
-
-            output = self.pool(output)
-
-            output = self.conv2(output)
-            output = self.relu2(output)
-
-            output = self.conv3(output)
-            output = self.bn3(output)
-            output = self.relu3(output)
-
-            # Above output will be in matrix form, with shape (256,32,75,75)
-
-            output = output.view(-1, 32 * 75 * 75)
-
-            output = self.fc(output)
-
-            return output
+    def forward(self, input):
+        output = self.layer1(input)
+        output = self.layer2(output)
+        output = self.layer3(output)
+        output = output.view(-1, 18 * 18 * 32)
+        output = self.fc(output)
+        return output
 
 
-    checkpoint = torch.load('best_checkpoint.model', map_location=torch.device('cpu'))
-    model = ConvNet(num_classes=16)
-    model.load_state_dict(checkpoint)
-    model.eval()
+checkpoint = torch.load('model2.model', map_location=torch.device('cpu'))
+model = ConvNet(num_classes=12)
+model.load_state_dict(checkpoint)
+model.eval()
 
-    # Transforms
-    transformer = transforms.Compose([
-        transforms.Resize((150, 150)),
-        transforms.ToTensor(),  # 0-255 to 0-1, numpy to tensors
-        transforms.Normalize([0.5, 0.5, 0.5],  # 0-1 to [-1,1] , formula (x-mean)/std
-                             [0.5, 0.5, 0.5])
-    ])
+# Add the softmax function
+softmax = torch.nn.Softmax(dim=1)
+
+# Change the threshold value to the desired accuracy threshold (e.g. 0.7 for 70%)
+thresholds = 0.7
+
+# Transforms
+transformer = transforms.Compose([
+    transforms.Resize((150, 150)),
+    transforms.ToTensor(),  # 0-255 to 0-1, numpy to tensors
+    transforms.Normalize([0.5, 0.5, 0.5],  # 0-1 to [-1,1] , formula (x-mean)/std
+                         [0.5, 0.5, 0.5])
+])
 
 
-    def prediction_image(image):
-        image_tensor = transformer(image).float()
-        image_tensor = image_tensor.unsqueeze_(0)
-        input = Variable(image_tensor)
-        output = model(input)
-        index = output.data.numpy().argmax()
-        pred = classes[index]
-        return pred
+def prediction_image(image):
+    image_tensor = transformer(image).float()
+    image_tensor = image_tensor.unsqueeze(0)
+
+    if torch.cuda.is_available():
+        image_tensor = image_tensor.cuda()
+
+    input = Variable(image_tensor)
+    output = model(input)
+
+    # Apply the softmax function to the output
+    probabilities = softmax(output).data.numpy()[0]
+
+    preds = []
+
+    for index, prob in enumerate(probabilities):
+        # Check if the probability is above the threshold for the current class
+        if prob >= thresholds:
+            preds.append(classes[index])
+
+    if len(preds) > 0:
+        return preds[0]  # Return the first predicted class
+    else:
+        return None

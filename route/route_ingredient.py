@@ -40,7 +40,7 @@ async def create_ingredient(new_ingredient: IngredientRequest,
         raise HTTPException(status_code=403, detail="Not authorized")
     ingredient = ingredient_repo.create_ingredient(new_ingredient=new_ingredient, db=db)
     if ingredient is None:
-        raise HTTPException(status_code=404, detail="Ingredient already exist")
+        raise HTTPException(status_code=200, detail="Ingredient already exist")
     return ingredient
 
 
@@ -56,7 +56,7 @@ async def update_product(ingredient_id: int,
     product = ingredient_repo.update_ingredient(ingredient_id=ingredient_id, updated_ingredient=updated_ingredient,
                                                 db=db)
     if product is None:
-        raise HTTPException(status_code=404, detail="there is no ingredient id with {}".format(ingredient_id))
+        raise HTTPException(status_code=200, detail="there is no ingredient id with {}".format(ingredient_id))
     return product
 
 
@@ -70,4 +70,4 @@ async def delete_product(ingredient_id: int,
         raise HTTPException(status_code=403, detail="Not authorized")
     product = ingredient_repo.delete_ingredient(ingredient_id=ingredient_id, db=db)
     if product is None:
-        raise HTTPException(status_code=404, detail="there is no ingredient id with {}".format(ingredient_id))
+        raise HTTPException(status_code=200, detail="there is no ingredient id with {}".format(ingredient_id))

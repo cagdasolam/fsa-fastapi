@@ -64,7 +64,7 @@ class ConvNet(nn.Module):
         return output
 
 
-checkpoint = torch.load('best_checkpoint.model.model', map_location=torch.device('cpu'))
+checkpoint = torch.load('best_checkpoint.model', map_location=torch.device('cpu'))
 model = ConvNet(num_classes=12)
 model.load_state_dict(checkpoint)
 model.eval()

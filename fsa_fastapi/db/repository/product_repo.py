@@ -1,8 +1,8 @@
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 
-from db.enity.product_entity import ProductEntity, ProductNutritionPer100GramEntity
+from db.enity.product_entity import ProductEntity
 from db.repository.ingredient_repo import get_ingredient_by_name
 from model.product_model import ProductRequest
 
@@ -42,20 +42,9 @@ def create_product(new_product: ProductRequest, db: Session):
             ingredient_entity = get_ingredient_by_name(name=ingredient.name, db=db)
             ingredients.append(ingredient_entity)
 
-        product = ProductEntity(name=new_product.name, ingredients=ingredients, brand=new_product.brand)
+        product = ProductEntity(name=new_product.name, ingredients=ingredients, brand=new_product.brand, nutrition=new_product.nutrition.dict())
 
-        nutrition = [ProductNutritionPer100GramEntity(
-            calories=new_product.nutrition.calories,
-            fat=new_product.nutrition.fat,
-            saturated_fat=new_product.nutrition.saturated_fat,
-            carbs=new_product.nutrition.carbs,
-            sugar=new_product.nutrition.sugar,
-            fiber=new_product.nutrition.fiber,
-            protein=new_product.nutrition.protein,
-            salt=new_product.nutrition.salt
-        )]
 
-        product.nutrition = nutrition
         db.add(product)
         db.commit()
         db.refresh(product)
@@ -100,3 +89,5 @@ def update_product(product_id: int, updated_product: ProductRequest, db: Session
         print(str(e))
         db.rollback()
         return None
+
+

@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[IngredientDTO])
 async def get_all_ingredients(db: Session = Depends(get_db),
-                              current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
+                              current_user: UserEntity = Depends(get_current_user_from_token)) -> [IngredientDTO]:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return ingredient_repo.get_ingredients(db=db)
@@ -24,7 +24,7 @@ async def get_all_ingredients(db: Session = Depends(get_db),
 @router.get("/get/{id}", response_model=IngredientDTO)
 async def get_ingredient_by_id(ingredient_id: int = Path(..., ge=1),
                                db: Session = Depends(get_db),
-                               current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
+                               current_user: UserEntity = Depends(get_current_user_from_token)) -> IngredientDTO:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return ingredient_repo.get_ingredient_by_id(ingredient_id=ingredient_id, db=db)
@@ -33,12 +33,14 @@ async def get_ingredient_by_id(ingredient_id: int = Path(..., ge=1),
 @router.post("/", response_model=IngredientDTO)
 async def create_ingredient(new_ingredient: IngredientRequest,
                             db: Session = Depends(get_db),
-                            current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
+                            current_user: UserEntity = Depends(get_current_user_from_token)) -> IngredientDTO:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
     ingredient = ingredient_repo.create_ingredient(new_ingredient=new_ingredient, db=db)
     if ingredient is None:
-        raise HTTPException(status_code=404, detail="Ingredient already exist")
+        raise HTTPException(status_code=200, detail="Ingredient already exist")
     return ingredient
 
 
@@ -49,10 +51,12 @@ async def update_product(ingredient_id: int,
                          current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
     product = ingredient_repo.update_ingredient(ingredient_id=ingredient_id, updated_ingredient=updated_ingredient,
                                                 db=db)
     if product is None:
-        raise HTTPException(status_code=404, detail="there is no ingredient id with {}".format(ingredient_id))
+        raise HTTPException(status_code=200, detail="there is no ingredient id with {}".format(ingredient_id))
     return product
 
 
@@ -62,6 +66,8 @@ async def delete_product(ingredient_id: int,
                          current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Not authorized")
     product = ingredient_repo.delete_ingredient(ingredient_id=ingredient_id, db=db)
     if product is None:
-        raise HTTPException(status_code=404, detail="there is no ingredient id with {}".format(ingredient_id))
+        raise HTTPException(status_code=200, detail="there is no ingredient id with {}".format(ingredient_id))

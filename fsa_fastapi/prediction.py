@@ -64,7 +64,7 @@ with open(class_file_path, 'r') as file:
             return output
 
 
-    checkpoint = torch.load('best_checkpoint.model', map_location=torch.device('cpu'))
+    checkpoint = torch.load('model2.model', map_location=torch.device('cpu'))
     model = ConvNet(num_classes=12)
     model.load_state_dict(checkpoint)
     model.eval()

@@ -1,30 +1,60 @@
-from typing import Any, List, Dict
-
-from PIL import Image
-from fastapi import APIRouter, Depends, Path, UploadFile, File
-from fastapi import HTTPException
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Session
-
 from random import sample
+from typing import Any, List
 
 import prediction
+from PIL import Image
 from db.enity.product_entity import ProductEntity
 from db.enity.user_entity import UserEntity
-from db.repository import product_repo
+from db.repository import product_repo, user_repo
 from db.session import get_db
+from fastapi import APIRouter, Depends, Path, UploadFile, File, Query
+from fastapi import HTTPException
 from model.product_model import ProductDTO, ProductRequest
 from route.route_login import get_current_user_from_token
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
 
+@router.get("/recommended")
+async def get_recommended_product(db: Session = Depends(get_db),
+                                  current_user: UserEntity = Depends(get_current_user_from_token)) -> dict[
+    str, list[Any]]:
+    user_diets = current_user.diets
+
+    non_consumable_ingredients = set()
+    for diet in user_diets:
+        non_consumable_ingredients.update(diet.cant_consume)
+
+    all_products = product_repo.get_products(db=db)
+
+    consumable_products = [product for product in all_products if
+                           not set(product.ingredients).intersection(non_consumable_ingredients)]
+
+    consumable_products_sample = sample(consumable_products, 5) if len(
+        consumable_products) > 5 else consumable_products
+
+    return {"products": [product for product in consumable_products_sample]}
+
+
+@router.get("/like", response_model=List[ProductDTO])
+async def get_likes(db: Session = Depends(get_db),
+                    current_user: UserEntity = Depends(get_current_user_from_token)):
+    user = user_repo.get_user_by_id(db=db, user_id=current_user.id)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+    return user.likes
+
+
 @router.get("/", response_model=List[ProductDTO])
 async def get_all_products(db: Session = Depends(get_db),
+                           page: int = Query(1, ge=1, description="Page number"),
+                           items_per_page: int = Query(5, ge=1, description="Items per page"),
+                           search: str = Query(None, description="Search query"),
                            current_user: UserEntity = Depends(get_current_user_from_token)) -> List[ProductDTO]:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return product_repo.get_products(db=db)
+    return product_repo.get_products(db=db, page=page, items_per_page=items_per_page, search=search)
 
 
 @router.get("/{product_id}", response_model=ProductDTO)
@@ -111,6 +141,18 @@ async def predict_product_from_photo(file: UploadFile = File(...),
             'can_consume': can_consume_product(found_product=found_product, current_user=current_user)}
 
 
+@router.post("/consume/{product_id}", response_model=ProductDTO)
+async def consume_product(product_id: int, db: Session = Depends(get_db),
+                          current_user: UserEntity = Depends(get_current_user_from_token)):
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    found_product = product_repo.get_by_product_id(product_id=product_id, db=db)
+    if found_product is None:
+        raise HTTPException(status_code=200, detail="no product found database")
+    return {'product': found_product,
+            'can_consume': can_consume_product(found_product=found_product, current_user=current_user)}
+
+
 def can_consume_product(found_product: ProductEntity, current_user: UserEntity) -> bool:
     ingredients_set = set(found_product.ingredients)
     diets_set = {frozenset(diet.cant_consume) for diet in current_user.diets}
@@ -120,27 +162,35 @@ def can_consume_product(found_product: ProductEntity, current_user: UserEntity) 
     return True
 
 
-@router.post("/recommended")
-async def get_recommended_product(db: Session = Depends(get_db),
-                                  current_user: UserEntity = Depends(get_current_user_from_token)) -> dict[
-    str, list[Any]]:
-    # Query to get user's diets
-    user_diets = current_user.diets
+@router.post("/like/{product_id}", response_model=ProductDTO)
+async def like(product_id: int, db: Session = Depends(get_db),
+               current_user: UserEntity = Depends(get_current_user_from_token)):
+    user = user_repo.get_user_by_id(db=db, user_id=current_user.id)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
 
-    # Query to get all ingredients that user can't consume
-    non_consumable_ingredients = set()
-    for diet in user_diets:
-        non_consumable_ingredients.update(diet.cant_consume)
+    product = product_repo.get_by_product_id(db=db, product_id=product_id)
+    if not product:
+        raise HTTPException(status_code=400, detail="Product not found")
 
-    # Query to get all products
-    all_products = product_repo.get_products(db=db)
+    user.likes.append(product)
+    db.commit()
 
-    # Filter out products that have ingredients the user can't consume
-    consumable_products = [product for product in all_products if
-                           not set(product.ingredients).intersection(non_consumable_ingredients)]
+    return product
 
-    # Choose 5 random products from consumable_products list
-    consumable_products_sample = sample(consumable_products, 5) if len(
-        consumable_products) > 5 else consumable_products
 
-    return {"products": [product for product in consumable_products_sample]}
+@router.post("/unlike/{product_id}", response_model=ProductDTO)
+async def unlike(product_id: int, db: Session = Depends(get_db),
+                 current_user: UserEntity = Depends(get_current_user_from_token)):
+    user = user_repo.get_user_by_id(db=db, user_id=current_user.id)
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+
+    product = product_repo.get_by_product_id(db=db, product_id=product_id)
+    if not product:
+        raise HTTPException(status_code=400, detail="Product not found")
+
+    user.likes.remove(product)
+    db.commit()
+
+    return product

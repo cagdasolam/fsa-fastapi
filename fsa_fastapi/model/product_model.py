@@ -19,6 +19,7 @@ class ProductNutritionPer100GramRequest(BaseModel):
 class ProductRequest(BaseModel):
     brand: str
     name: str
+    folder_name: str
     ingredients: List[IngredientRequest]
     nutrition: ProductNutritionPer100GramRequest
 
@@ -47,6 +48,7 @@ class ProductDTO(BaseModel):
     name: str
     ingredients: List[IngredientDTO]
     nutrition: ProductNutritionPer100GramDTO
+    folder_name: str
 
     class Config:
         orm_mode = True

@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.orm.exc import NoResultFound
@@ -15,7 +16,7 @@ def get_by_product_id(product_id: int, db: Session):
         return None
 
 
-def get_by_product_name(product_name: str, db: Session) -> ProductEntity:
+def get_by_product_name(product_name: str, db: Session) -> ProductEntity | None:
     try:
         product = db.query(ProductEntity).filter(ProductEntity.name == product_name).first()
         return product
@@ -23,8 +24,23 @@ def get_by_product_name(product_name: str, db: Session) -> ProductEntity:
         return None
 
 
-def get_products(db: Session):
-    return db.query(ProductEntity).all()
+def get_by_product_folder_name(folder_name: str, db: Session) -> ProductEntity | None:
+    try:
+        product = db.query(ProductEntity).filter(ProductEntity.folder_name == folder_name).first()
+        return product
+    except NoResultFound:
+        return None
+
+
+def get_products(db: Session, page: int, items_per_page: int, search: str):
+    products_query = db.query(ProductEntity)
+
+    if search:
+        products_query = products_query.filter(or_(ProductEntity.name.like(f"%{search}%")))
+
+    products_query = products_query.offset((page - 1) * items_per_page).limit(items_per_page)
+
+    return products_query.all()
 
 
 def get_products_by_brand(brand_name: str, db: Session):
@@ -42,8 +58,8 @@ def create_product(new_product: ProductRequest, db: Session):
             ingredient_entity = get_ingredient_by_name(name=ingredient.name, db=db)
             ingredients.append(ingredient_entity)
 
-        product = ProductEntity(name=new_product.name, ingredients=ingredients, brand=new_product.brand, nutrition=new_product.nutrition.dict())
-
+        product = ProductEntity(name=new_product.name, ingredients=ingredients, brand=new_product.brand,
+                                folder_name=new_product.folder_name, nutrition=new_product.nutrition.dict())
 
         db.add(product)
         db.commit()
@@ -89,5 +105,3 @@ def update_product(product_id: int, updated_product: ProductRequest, db: Session
         print(str(e))
         db.rollback()
         return None
-
-

@@ -25,5 +25,5 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=cagdascagdas1
       - POSTGRES_DB=fsa
-      
+      - SECRET_KEY=supersecretkeyhere!     
 

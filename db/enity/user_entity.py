@@ -8,6 +8,11 @@ user_diet_association = Table('user_diet_association', Base.metadata,
                               Column('diet_id', Integer, ForeignKey('diets.id'))
                               )
 
+user_basket_association = Table('user_basket_association', Base.metadata,
+                                Column('user_id', Integer, ForeignKey('users.id')),
+                                Column('basket_id', Integer, ForeignKey('basket.id')),
+                                )
+
 
 class UserEntity(Base):
     __tablename__ = 'users'
@@ -19,3 +24,4 @@ class UserEntity(Base):
     is_active = Column(Boolean(), default=True)
     is_superuser = Column(Boolean(), default=False)
     diets = relationship("DietEntity", secondary=user_diet_association)
+    baskets = relationship("BasketEntity", secondary=user_basket_association)

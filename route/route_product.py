@@ -1,20 +1,17 @@
-from typing import Any, List, Dict
-
-from PIL import Image
-from fastapi import APIRouter, Depends, Path, UploadFile, File
-from fastapi import HTTPException
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Session
-
 from random import sample
+from typing import Any, List
 
 import prediction
+from PIL import Image
 from db.enity.product_entity import ProductEntity
 from db.enity.user_entity import UserEntity
 from db.repository import product_repo
 from db.session import get_db
+from fastapi import APIRouter, Depends, Path, UploadFile, File
+from fastapi import HTTPException
 from model.product_model import ProductDTO, ProductRequest
 from route.route_login import get_current_user_from_token
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
@@ -120,26 +117,21 @@ def can_consume_product(found_product: ProductEntity, current_user: UserEntity) 
     return True
 
 
-@router.post("/recommended")
+@router.get("/recommended")
 async def get_recommended_product(db: Session = Depends(get_db),
                                   current_user: UserEntity = Depends(get_current_user_from_token)) -> dict[
     str, list[Any]]:
-    # Query to get user's diets
     user_diets = current_user.diets
 
-    # Query to get all ingredients that user can't consume
     non_consumable_ingredients = set()
     for diet in user_diets:
         non_consumable_ingredients.update(diet.cant_consume)
 
-    # Query to get all products
     all_products = product_repo.get_products(db=db)
 
-    # Filter out products that have ingredients the user can't consume
     consumable_products = [product for product in all_products if
                            not set(product.ingredients).intersection(non_consumable_ingredients)]
 
-    # Choose 5 random products from consumable_products list
     consumable_products_sample = sample(consumable_products, 5) if len(
         consumable_products) > 5 else consumable_products
 

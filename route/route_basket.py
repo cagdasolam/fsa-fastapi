@@ -1,18 +1,12 @@
-from random import sample
-from typing import Any, List
+from typing import List
 
-import prediction
-from PIL import Image
-from db.enity.product_entity import ProductEntity
 from db.enity.user_entity import UserEntity
 from db.repository import basket_repo
 from db.session import get_db
-from fastapi import APIRouter, Depends, Path, UploadFile, File
+from fastapi import APIRouter, Depends
 from fastapi import HTTPException
-from model.product_model import ProductDTO, ProductRequest
 from model.basket_model import BasketRequest, BasketDTO
 from route.route_login import get_current_user_from_token
-from route.route_users import router
 from sqlalchemy.orm import Session
 
 router = APIRouter()

@@ -12,6 +12,14 @@ def get_users(db: Session):
     return db.query(UserEntity).all()
 
 
+def get_user_by_id(db: Session, user_id: int):
+    try:
+        user = db.query(UserEntity).filter(UserEntity.id == user_id).first()
+    except NoResultFound:
+        user = None
+    return user
+
+
 def get_user_by_email(email: str, db: Session):
     try:
         user = db.query(UserEntity).filter(UserEntity.email == email).first()

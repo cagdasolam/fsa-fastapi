@@ -80,11 +80,17 @@ def delete_basket(basket_id: int, db: Session):
 
 def update_basket(basket_id: int, updated_basket: BasketRequest, db: Session):
     try:
-        basket = db.query(BasketEntity).filter(BasketEntity.id == basket_id).first()
-        basket.name = updated_basket.name
-        basket.products = updated_basket.products
+        found_basket = db.query(BasketEntity).filter(BasketEntity.id == basket_id).first()
+        products = db.query(ProductEntity).filter(ProductEntity.id.in_(updated_basket.products)).all()
+
+        if len(products) != len(updated_basket.products):
+            raise ValueError("Some product IDs were invalid")
+
+        found_basket.name = updated_basket.name
+        found_basket.products = products
+
         db.commit()
-        return basket
+        return found_basket
     except NoResultFound:
         return None
     except SQLAlchemyError as e:

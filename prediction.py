@@ -4,14 +4,14 @@ from torchvision.transforms import transforms
 from torch.autograd import Variable
 from PIL import Image
 
-class_file_path = './product_names.txt'
+class_file_path = './klasor_listesi.txt'
 
 with open(class_file_path, 'r') as file:
     classes = file.read().splitlines()
 
 
     class ConvNet(nn.Module):
-        def __init__(self, num_classes=12):
+        def __init__(self, num_classes=195):
             super(ConvNet, self).__init__()
 
             self.layer1 = nn.Sequential(
@@ -64,8 +64,8 @@ with open(class_file_path, 'r') as file:
             return output
 
 
-    checkpoint = torch.load('model2.model', map_location=torch.device('cpu'))
-    model = ConvNet(num_classes=12)
+    checkpoint = torch.load('model195.model', map_location=torch.device('cpu'))
+    model = ConvNet(num_classes=195)
     model.load_state_dict(checkpoint)
     model.eval()
 
@@ -73,7 +73,7 @@ with open(class_file_path, 'r') as file:
     softmax = torch.nn.Softmax(dim=1)
 
     # Change the threshold value to the desired accuracy threshold (e.g. 0.7 for 70%)
-    thresholds = 0.7
+    thresholds = 0.2
 
     # Transforms
     transformer = transforms.Compose([

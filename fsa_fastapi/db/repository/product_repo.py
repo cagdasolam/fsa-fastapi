@@ -16,7 +16,7 @@ def get_by_product_id(product_id: int, db: Session):
         return None
 
 
-def get_by_product_name(product_name: str, db: Session) -> ProductEntity | None:
+def get_by_product_name(product_name: str, db: Session):
     try:
         product = db.query(ProductEntity).filter(ProductEntity.name == product_name).first()
         return product
@@ -24,7 +24,7 @@ def get_by_product_name(product_name: str, db: Session) -> ProductEntity | None:
         return None
 
 
-def get_by_product_folder_name(folder_name: str, db: Session) -> ProductEntity | None:
+def get_by_product_folder_name(folder_name: str, db: Session):
     try:
         product = db.query(ProductEntity).filter(ProductEntity.folder_name == folder_name).first()
         return product

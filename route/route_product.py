@@ -26,7 +26,7 @@ async def get_recommended_product(db: Session = Depends(get_db),
     for diet in user_diets:
         non_consumable_ingredients.update(diet.cant_consume)
 
-    all_products = product_repo.get_products(db=db)
+    all_products = product_repo.get_products(db=db, page=1, items_per_page=200, search=None)
 
     consumable_products = [product for product in all_products if
                            not set(product.ingredients).intersection(non_consumable_ingredients)]
@@ -57,7 +57,7 @@ async def get_all_products(db: Session = Depends(get_db),
     return product_repo.get_products(db=db, page=page, items_per_page=items_per_page, search=search)
 
 
-@router.get("/{product_id}", response_model=ProductDTO)
+@router.get("/id/{product_id}", response_model=ProductDTO)
 async def get_product_by_id(product_id: int = Path(..., ge=1),
                             db: Session = Depends(get_db),
                             current_user: UserEntity = Depends(get_current_user_from_token)) -> ProductDTO:
@@ -69,7 +69,7 @@ async def get_product_by_id(product_id: int = Path(..., ge=1),
     return product
 
 
-@router.get("/{brand_name}", response_model=List[ProductDTO])
+@router.get("/brand/{brand_name}", response_model=List[ProductDTO])
 async def get_products_by_brand(brand_name: str,
                                 db: Session = Depends(get_db),
                                 current_user: UserEntity = Depends(get_current_user_from_token)) -> ProductDTO:
@@ -134,7 +134,7 @@ async def predict_product_from_photo(file: UploadFile = File(...),
     res = prediction.prediction_image(img)
     if res is None:
         raise HTTPException(status_code=200, detail="no product found")
-    found_product = product_repo.get_by_product_name(product_name=res, db=db)
+    found_product = product_repo.get_by_product_folder_name(product_name=res, db=db)
     if found_product is None:
         raise HTTPException(status_code=200, detail="no product found database")
     return {'product': found_product,

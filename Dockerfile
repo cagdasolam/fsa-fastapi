@@ -11,7 +11,7 @@ FROM base AS dependencies
 RUN pip install --upgrade pip
 # Copy only requirements to cache them in docker layer
 COPY ./fsa_fastapi /app/fsa_fastapi
-COPY model2.model pyproject.toml poetry.lock /app/
+COPY model195.model klasor_listesi.txt  pyproject.toml poetry.lock /app/
 # Project initialization
 RUN pip install poetry \
     && poetry config virtualenvs.create false \

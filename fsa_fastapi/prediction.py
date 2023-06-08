@@ -4,7 +4,7 @@ from torchvision.transforms import transforms
 from torch.autograd import Variable
 from PIL import Image
 
-class_file_path = './klasor_listesi.txt'
+class_file_path = '/app/klasor_listesi.txt'
 
 with open(class_file_path, 'r') as file:
     classes = file.read().splitlines()
@@ -64,7 +64,7 @@ with open(class_file_path, 'r') as file:
             return output
 
 
-    checkpoint = torch.load('model195.model', map_location=torch.device('cpu'))
+    checkpoint = torch.load('/app/model195.model', map_location=torch.device('cpu'))
     model = ConvNet(num_classes=195)
     model.load_state_dict(checkpoint)
     model.eval()

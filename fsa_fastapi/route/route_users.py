@@ -15,10 +15,15 @@ router = APIRouter()
 
 @router.get("/", response_model=List[UserDTO])
 async def get_all_users(db: Session = Depends(get_db),
-                        current_user: UserEntity = Depends(get_current_user_from_token)) -> Any:
+                        current_user: UserEntity = Depends(get_current_user_from_token)):
     if not current_user.is_superuser:
         raise HTTPException(status_code=401, detail="Not authorized")
     return user_repo.get_users(db=db)
+
+
+@router.get("/current", response_model=UserDTO)
+async def get_current_user(db: Session = Depends(get_db), current_user: UserEntity = Depends(get_current_user_from_token)):
+    return current_user
 
 
 @router.post("/", response_model=UserDTO)

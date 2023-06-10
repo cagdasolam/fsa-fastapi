@@ -55,11 +55,12 @@ def create_product(new_product: ProductRequest, db: Session):
     try:
         ingredients = []
         for ingredient in new_product.ingredients:
-            ingredient_entity = get_ingredient_by_name(name=ingredient.name, db=db)
+            ingredient_entity = get_ingredient_by_name(name=ingredient, db=db)
             ingredients.append(ingredient_entity)
 
         product = ProductEntity(name=new_product.name, ingredients=ingredients, brand=new_product.brand,
-                                folder_name=new_product.folder_name, nutrition=new_product.nutrition.dict())
+                                folder_name=new_product.folder_name, nutrition=new_product.nutrition.dict(),
+                                photo_url=new_product.photo_url)
 
         db.add(product)
         db.commit()

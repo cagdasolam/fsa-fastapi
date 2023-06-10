@@ -18,3 +18,4 @@ class ProductEntity(Base):
     folder_name = Column(String(50), unique=True, nullable=False)
     ingredients = relationship("IngredientEntity", secondary=product_ingredient_association)
     nutrition = Column(JSONB)
+    photo_url = Column(String(50))

@@ -134,7 +134,7 @@ async def predict_product_from_photo(file: UploadFile = File(...),
     res = prediction.prediction_image(img)
     if res is None:
         raise HTTPException(status_code=200, detail="no product found")
-    found_product = product_repo.get_by_product_folder_name(product_name=res, db=db)
+    found_product = product_repo.get_by_product_folder_name(folder_name=res, db=db)
     if found_product is None:
         raise HTTPException(status_code=200, detail="no product found database")
     return {'product': found_product,

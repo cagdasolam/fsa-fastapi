@@ -10,12 +10,64 @@ with open(class_file_path, 'r') as file:
     classes = file.read().splitlines()
 
 
+    class ConvNet(nn.Module):
+        def __init__(self, num_classes=195):
+            super(ConvNet, self).__init__()
 
-    model = resnet50(pretrained=False)
-    model.fc = torch.nn.Linear(2048, 195)  # Again, change 195 to match the number of classes you have
-    model.load_state_dict(torch.load("/app/model195.model"))
+            self.layer1 = nn.Sequential(
+                nn.Conv2d(in_channels=3, out_channels=12, kernel_size=3, stride=1, padding=1),
+                nn.BatchNorm2d(num_features=12),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2),
+                nn.Dropout2d(p=0.2)
+            )
+
+            self.layer2 = nn.Sequential(
+                nn.Conv2d(in_channels=12, out_channels=20, kernel_size=3, stride=1, padding=1),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2),
+                nn.Dropout2d(p=0.3)
+            )
+
+            self.layer3 = nn.Sequential(
+                nn.Conv2d(in_channels=20, out_channels=32, kernel_size=3, stride=1, padding=1),
+                nn.BatchNorm2d(num_features=32),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2),
+                nn.Dropout2d(p=0.4)
+            )
+
+            self.layer4 = nn.Sequential(
+                nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),
+                nn.BatchNorm2d(num_features=64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2),
+                nn.Dropout2d(p=0.5)
+            )
+
+            self.layer5 = nn.Sequential(
+                nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
+                nn.BatchNorm2d(num_features=128),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2),
+                nn.Dropout2d(p=0.6)
+            )
+
+            self.fc = nn.Linear(in_features=18 * 18 * 32, out_features=num_classes)
+
+        def forward(self, input):
+            output = self.layer1(input)
+            output = self.layer2(output)
+            output = self.layer3(output)
+            output = output.view(-1, 18 * 18 * 32)
+            output = self.fc(output)
+            return output
+
+
+    checkpoint = torch.load('/app/model195.model', map_location=torch.device('cpu'))
+    model = ConvNet(num_classes=195)
+    model.load_state_dict(checkpoint)
     model.eval()
-    
 
     # Add the softmax function
     softmax = torch.nn.Softmax(dim=1)
@@ -25,28 +77,34 @@ with open(class_file_path, 'r') as file:
 
     # Transforms
     transformer = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
+        transforms.Resize((150, 150)),
+        transforms.ToTensor(),  # 0-255 to 0-1, numpy to tensors
+        transforms.Normalize([0.5, 0.5, 0.5],  # 0-1 to [-1,1] , formula (x-mean)/std
+                             [0.5, 0.5, 0.5])
+    ])
 
 
     def prediction_image(image):
-        image = Image.open('path_to_your_image.jpg')  # Enter the path to the image you want to predict
-        image = image_transforms(image).float()
-        image = Variable(image, requires_grad=True)
-        image = image.unsqueeze(0)
+        image_tensor = transformer(image).float()
+        image_tensor = image_tensor.unsqueeze(0)
 
-        # Make the prediction
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        image = image.to(device)
-        model = model.to(device)
-        output = model(image)
+        if torch.cuda.is_available():
+            image_tensor = image_tensor.cuda()
 
-        # Get the predicted class
-        _, predicted_class = torch.max(output, 1)
+        input = Variable(image_tensor)
+        output = model(input)
 
-        return predicted_class.item()
+        # Apply the softmax function to the output
+        probabilities = softmax(output).data.numpy()[0]
 
-        
+        preds = []
+
+        for index, prob in enumerate(probabilities):
+            # Check if the probability is above the threshold for the current class
+            if prob >= thresholds:
+                preds.append(classes[index])
+
+        if len(preds) > 0:
+            return preds[0]  # Return the first predicted class
+        else:
+            return None

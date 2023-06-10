@@ -42,8 +42,6 @@ async def create_diet(new_diet: DietRequest,
     if not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Not authorized")
     diet = diet_repo.create_diet(new_diet=new_diet, db=db)
-    if diet is None:
-        raise HTTPException(status_code=200, detail="Product already exist")
     return diet
 
 

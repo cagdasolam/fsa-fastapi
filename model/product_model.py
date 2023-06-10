@@ -20,8 +20,9 @@ class ProductRequest(BaseModel):
     brand: str
     name: str
     folder_name: str
-    ingredients: List[IngredientRequest]
+    ingredients: List[str]
     nutrition: ProductNutritionPer100GramRequest
+    photo_url: str
 
     class Config:
         arbitrary_types_allowed = True
@@ -49,6 +50,7 @@ class ProductDTO(BaseModel):
     ingredients: List[IngredientDTO]
     nutrition: ProductNutritionPer100GramDTO
     folder_name: str
+    photo_url: str
 
     class Config:
         orm_mode = True

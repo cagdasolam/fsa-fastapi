@@ -4,7 +4,9 @@ __pycache__
 venv/
 env
 test_db.db
-productsimageson/
-productsimage/
+
 photos/
+productsimage/
+productsimageson/
+
 *.pth

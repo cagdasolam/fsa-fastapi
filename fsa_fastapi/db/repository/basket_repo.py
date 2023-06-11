@@ -67,9 +67,10 @@ def create_basket(basket_request: BasketRequest, user: UserEntity, db: Session):
 def delete_basket(basket_id: int, db: Session):
     try:
         basket = db.query(BasketEntity).filter(BasketEntity.id == basket_id).first()
+        if not basket:
+            return False
         db.delete(basket)
         db.commit()
-        return True
     except NoResultFound:
         return False
     except SQLAlchemyError as e:

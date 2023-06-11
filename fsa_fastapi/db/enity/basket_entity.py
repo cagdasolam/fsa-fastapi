@@ -4,8 +4,8 @@ from sqlalchemy.orm import relationship
 from db.base_class import Base
 
 basket_product_association = Table('basket_product_association', Base.metadata,
-                                   Column('basket_id', Integer, ForeignKey('basket.id')),
-                                   Column('product_id', Integer, ForeignKey('products.id')),
+                                   Column('basket_id', Integer, ForeignKey('basket.id', ondelete='CASCADE')),
+                                   Column('product_id', Integer, ForeignKey('products.id', ondelete='CASCADE')),
                                    )
 
 

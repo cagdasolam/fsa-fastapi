@@ -141,7 +141,7 @@ async def predict_product_from_photo(file: UploadFile = File(...),
             'can_consume': can_consume_product(found_product=found_product, current_user=current_user)}
 
 
-@router.post("/consume/{product_id}", response_model=ProductDTO)
+@router.post("/consume/{product_id}")
 async def consume_product(product_id: int, db: Session = Depends(get_db),
                           current_user: UserEntity = Depends(get_current_user_from_token)):
     if current_user is None:
@@ -149,8 +149,7 @@ async def consume_product(product_id: int, db: Session = Depends(get_db),
     found_product = product_repo.get_by_product_id(product_id=product_id, db=db)
     if found_product is None:
         raise HTTPException(status_code=200, detail="no product found database")
-    return {'product': found_product,
-            'can_consume': can_consume_product(found_product=found_product, current_user=current_user)}
+    return can_consume_product(found_product=found_product, current_user=current_user)
 
 
 def can_consume_product(found_product: ProductEntity, current_user: UserEntity) -> bool:

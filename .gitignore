@@ -1,0 +1,10 @@
+__pycache__
+.idea
+.env
+venv/
+env
+test_db.db
+productsimageson/
+productsimage/
+photos/
+*.pth

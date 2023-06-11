@@ -9,8 +9,8 @@ user_diet_association = Table('user_diet_association', Base.metadata,
                               )
 
 user_basket_association = Table('user_basket_association', Base.metadata,
-                                Column('user_id', Integer, ForeignKey('users.id')),
-                                Column('basket_id', Integer, ForeignKey('basket.id')),
+                                Column('user_id', Integer, ForeignKey('users.id',ondelete='CASCADE')),
+                                Column('basket_id', Integer, ForeignKey('basket.id', ondelete='CASCADE'))
                                 )
 
 users_likes = Table('users_likes', Base.metadata,

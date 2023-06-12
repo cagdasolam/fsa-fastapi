@@ -31,7 +31,7 @@ def create_diet(new_diet: DietRequest, db: Session):
     try:
         cant_consume = []
         for ingredient in new_diet.cant_consume:
-            ingredient_entity = get_ingredient_by_name(name=ingredient.name, db=db)
+            ingredient_entity = get_ingredient_by_name(name=ingredient, db=db)
             cant_consume.append(ingredient_entity)
 
         diet = DietEntity(name=new_diet.name, cant_consume=cant_consume)
@@ -65,10 +65,10 @@ def update_diet(diet_id: int, updated_diet: DietRequest, db: Session):
         diet.name = updated_diet.name
         new_cant_consume = []
         for ingredient in updated_diet.cant_consume:
-            ingredient_entity = get_ingredient_by_name(name=ingredient.name, db=db)
+            ingredient_entity = get_ingredient_by_name(name=ingredient, db=db)
             new_cant_consume.append(ingredient_entity)
 
-        diet.ingredients = new_cant_consume
+        diet.cant_consume = new_cant_consume
         db.commit()
         return diet
     except NoResultFound:

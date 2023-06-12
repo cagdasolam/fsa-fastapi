@@ -17,7 +17,7 @@ class DietDTO(BaseModel):
 
 class DietRequest(BaseModel):
     name: str
-    cant_consume: List[IngredientRequest]
+    cant_consume: List[str]
 
     class Config:
         arbitrary_types_allowed = True

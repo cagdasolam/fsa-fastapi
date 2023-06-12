@@ -15,7 +15,7 @@ user_basket_association = Table('user_basket_association', Base.metadata,
 
 users_likes = Table('users_likes', Base.metadata,
                     Column('user_id', Integer, ForeignKey('users.id')),
-                    Column('product_id', Integer, ForeignKey('products.id')),
+                    Column('product_id', Integer, ForeignKey('products.id', ondelete='CASCADE')),
                     )
 
 
